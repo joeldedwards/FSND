@@ -27,7 +27,7 @@ class Movies(db.Model):
     genre = db.Column(db.String())
     rating = db.Column(db.Float())
     actors = db.Column(db.String())
-    shows = db.relationship('Show', backref='Movies', lazy=True)
+    films = db.relationship('Film', backref='Movies', lazy=True)
 
     def __repr__(self):
         return f'<Movies {self.id} {self.title}>'
@@ -49,7 +49,7 @@ class Actors(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
     date_of_birth = db.Column(db.DateTime, nullable=False)
-    shows = db.relationship('Show', backref='Actors', lazy=True)
+    films = db.relationship('Film', backref='Actors', lazy=True)
 
     def __repr__(self):
         return f'<Actors {self.id} {self.name}>'
@@ -64,3 +64,13 @@ class Actors(db.Model):
     def delete(self):
         db.session.delete(self)
         db.session.commit()
+
+class Film(db.Model):
+    __tablename__ = 'Film'
+
+    id = db.Column(db.Integer, primary_key=True)
+    movie_id = db.Column(db.Integer, db.ForeignKey(Movie.id), nullable=False)
+    actor_id = db.Column(db.Integer, db.ForeignKey(Actor.id), nullable=False)
+
+    def __repr__(self):
+        return f'<Film {self.id}>'

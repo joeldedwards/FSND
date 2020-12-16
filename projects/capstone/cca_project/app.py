@@ -12,7 +12,7 @@ from flask_cors import CORS
 from flask_moment import Moment
 from flask_migrate import Migrate
 from datetime import date
-from models import setup_db, Movies, Actors, Show
+from models import setup_db, Movies, Actors, Film
 import sys
 
 MOVIES_PER_PAGE = 10
