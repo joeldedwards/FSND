@@ -8,11 +8,13 @@ import dateutil.parser
 import babel
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import exc
 from flask_cors import CORS
 from flask_moment import Moment
 from flask_migrate import Migrate
 from datetime import date
 from models import setup_db, Movies, Actors, Film
+from auth import AuthError, requires_auth
 import sys
 
 MOVIES_PER_PAGE = 10
@@ -73,20 +75,15 @@ def create_app(test_config=None):
         })
 
     @app.route('/add', methods=['POST'])
+    @requires_auth('post:movies')
     def add_movie():
-        body = request.get_json()
-
-        title = body.get('title', None)
-        release_year = body.get('release_year', None)
-        runtimne = body.get('runtimne', None)
-        director = body.get('director', None)
-        description = body.get('description', None)
-        genre = body.get('genre', None)
-        rating = body.get('rating', None)
-        actors = body.get('actors', None)
 
         try:
-            movie = Movies(title=title, release_year=release_year, runtimne=runtimne, director=director, description=description, genre=genre, rating=rating, actors=actors)
+            body = request.get_json()
+            title = body['title']
+            release_date = body['release_date']
+            actors = body['actors']
+            movie = Movies(title=title, release_date=release_date, actors=actors)
             movie.insert()
 
             return jsonify({
@@ -94,6 +91,54 @@ def create_app(test_config=None):
                 'created': movie.id,
                 'total_movies': len(Movies.query.all())
             })
+
+        except:
+            abort(422)
+
+    @app.route('/movies/<int:movie_id>', methods=['PATCH'])
+    @requires_auth('patch:movies')
+    def update_movie(movie_id):
+
+        body = request.get_json()
+        title = body.get('title', None)
+        release_date = body.get('release_date', None)
+        actors = body.get('actors', None)
+        movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
+        
+        if movie is None:
+            abort(404)
+
+        try:
+            movie.title = title
+            movie.release_date = release_date
+            movie.actors = actors
+            movie.update()
+
+            return jsonify({
+                'success': True,
+                'updated': movie.id,
+                'total_movies': len(Movies.query.all())
+            })
+
+        except:
+            abort(422)
+
+    @app.route('/movies/<int:movie_id>', methods=['DELETE'])
+    @requires_auth('delete:movies')
+    def delete_drink(movie_id):
+
+        movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
+
+        if movie is None:
+            abort(404)
+
+        try:
+            movie.delete()
+
+            return jsonify({
+                'success': True,
+                'delete': movie_id
+            }), 200
 
         except:
             abort(422)
@@ -108,14 +153,16 @@ def create_app(test_config=None):
         })
 
     @app.route('/add', methods=['POST'])
+    @requires_auth('post:actors')
     def add_actor():
         body = request.get_json()
 
         name = body.get('name', None)
-        date_of_birth = body.get('date_of_birth', None)
+        age = body.get('age', None)
+        gender = body.get('gender', None)
 
         try:
-            actor = Actors(name=name, date_of_birth=date_of_birth)
+            actor = Actors(name=name, age=age, gender=gender)
             actor.insert()
 
             return jsonify({
@@ -167,6 +214,12 @@ def create_app(test_config=None):
             "error": 500,
             "message": "internal server error"
             }), 500
+
+    @app.errorhandler(AuthError)
+    def handle_auth_error(error):
+        response = jsonify(error.error)
+        response.status_code = error.status_code
+        return response
 
     return app
 

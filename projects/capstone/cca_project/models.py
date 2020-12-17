@@ -20,14 +20,8 @@ class Movies(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String())
-    release_year = db.Column(db.Integer)
-    runtimne = db.Column(db.Integer)
-    director = db.Column(db.String())
-    description = db.Column(db.String(500))
-    genre = db.Column(db.String())
-    rating = db.Column(db.Float())
-    actors = db.Column(db.String())
-    films = db.relationship('Film', backref='Movies', lazy=True)
+    release_date = db.Column(db.Integer)
+    actors = db.relationship('Film', backref='Movies', lazy=True)
 
     def __repr__(self):
         return f'<Movies {self.id} {self.title}>'
@@ -48,7 +42,8 @@ class Actors(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String())
-    date_of_birth = db.Column(db.DateTime, nullable=False)
+    age = db.Column(db.Integer)
+    gender = db.Column(db.String())
     films = db.relationship('Film', backref='Actors', lazy=True)
 
     def __repr__(self):
