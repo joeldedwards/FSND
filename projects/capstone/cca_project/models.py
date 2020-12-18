@@ -1,6 +1,7 @@
 import os
+from sqlalchemy import Column, String, Integer, Float, ForeignKey, create_engine
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column, String, Integer, create_engine
+from flask_migrate import Migrate
 import json
 
 database_name = "moviesdb"
@@ -14,14 +15,21 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     db.create_all()
+    migrate = Migrate(app, db)
+
+def db_drop_and_create_all():
+    db.drop_all()
+    db.create_all()
 
 class Movies(db.Model):
     __tablename__ = 'Movies'
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String())
-    release_date = db.Column(db.Integer)
-    actors = db.relationship('Film', backref='Movies', lazy=True)
+    title = db.Column(db.String(50), nullable=False)
+    release_date = db.Column(db.Integer, nullable=False)
+    runtime = db.Column(db.Integer, nullable=False)
+    actor_id = Column(Integer, ForeignKey('Actors.id'))
+    stars = db.relationship('Actors', backref='Movies', lazy=True)
 
     def __repr__(self):
         return f'<Movies {self.id} {self.title}>'
@@ -37,14 +45,22 @@ class Movies(db.Model):
         db.session.delete(self)
         db.session.commit()
 
+    def format(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'release_date': self.release_date,
+            'runtime': self.runtime
+            }
+
 class Actors(db.Model):
     __tablename__ = 'Actors'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String())
-    age = db.Column(db.Integer)
-    gender = db.Column(db.String())
-    films = db.relationship('Film', backref='Actors', lazy=True)
+    name = db.Column(db.String(), nullable=False)
+    age = db.Column(db.Integer, nullable=False)
+    gender = db.Column(String, nullable=False)
+    films = db.relationship('Movies', backref='Actors', lazy=True)
 
     def __repr__(self):
         return f'<Actors {self.id} {self.name}>'
@@ -60,12 +76,10 @@ class Actors(db.Model):
         db.session.delete(self)
         db.session.commit()
 
-class Film(db.Model):
-    __tablename__ = 'Film'
-
-    id = db.Column(db.Integer, primary_key=True)
-    movie_id = db.Column(db.Integer, db.ForeignKey(Movie.id), nullable=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey(Actor.id), nullable=False)
-
-    def __repr__(self):
-        return f'<Film {self.id}>'
+    def format(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'age': self.age,
+            'gender': self.gender
+            }

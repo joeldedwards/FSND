@@ -3,44 +3,18 @@
 # ----------------------------------------------------------------------------#
 
 import os
-import json
-import dateutil.parser
-import babel
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import exc
 from flask_cors import CORS
-from flask_moment import Moment
-from flask_migrate import Migrate
-from datetime import date
-from models import setup_db, Movies, Actors, Film
+from models import setup_db, Movies, Actors
 from auth import AuthError, requires_auth
-import sys
 
 MOVIES_PER_PAGE = 10
 ACTORS_PER_PAGE = 10
 
-# ----------------------------------------------------------------------------#
-# Filters.
-# ----------------------------------------------------------------------------#
-
-def format_datetime(value, format='medium'):
-  date = dateutil.parser.parse(value)
-  if format == 'full':
-      format="EEEE MMMM, d, y 'at' h:mma"
-  elif format == 'medium':
-      format="EE MM, dd, y h:mma"
-  return babel.dates.format_datetime(date, format)
-
-app.jinja_env.filters['datetime'] = format_datetime
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
-    moment = Moment(app)
-    app.config.from_object('config')
-    migrate = Migrate(app, setup_db)
-    now = datetime.utcnow()
     setup_db(app)
     CORS(app)
 
@@ -57,6 +31,12 @@ def create_app(test_config=None):
           'GET,PUT,POST,DELETE,OPTIONS'
           )
         return response
+
+    @app.route('/')
+    def home():
+        msg = "Welcome to Capstone Casting Agency!"
+
+        return msg
 
     def get_movie_list():
         movies = {}
@@ -76,12 +56,13 @@ def create_app(test_config=None):
 
     @app.route('/add', methods=['POST'])
     @requires_auth('post:movies')
-    def add_movie():
+    def add_movie(payload):
 
         try:
             body = request.get_json()
             title = body['title']
             release_date = body['release_date']
+            runtime = body['runtime']
             actors = body['actors']
             movie = Movies(title=title, release_date=release_date, actors=actors)
             movie.insert()
@@ -97,11 +78,12 @@ def create_app(test_config=None):
 
     @app.route('/movies/<int:movie_id>', methods=['PATCH'])
     @requires_auth('patch:movies')
-    def update_movie(movie_id):
+    def update_movie(payload, movie_id):
 
         body = request.get_json()
         title = body.get('title', None)
         release_date = body.get('release_date', None)
+        runtime = body.get('runtime', None)
         actors = body.get('actors', None)
         movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
         
@@ -111,6 +93,7 @@ def create_app(test_config=None):
         try:
             movie.title = title
             movie.release_date = release_date
+            movie.runtime = runtime
             movie.actors = actors
             movie.update()
 
@@ -125,7 +108,7 @@ def create_app(test_config=None):
 
     @app.route('/movies/<int:movie_id>', methods=['DELETE'])
     @requires_auth('delete:movies')
-    def delete_drink(movie_id):
+    def delete_movie(payload, movie_id):
 
         movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
 
@@ -154,7 +137,7 @@ def create_app(test_config=None):
 
     @app.route('/add', methods=['POST'])
     @requires_auth('post:actors')
-    def add_actor():
+    def add_actor(payload):
         body = request.get_json()
 
         name = body.get('name', None)
@@ -170,6 +153,54 @@ def create_app(test_config=None):
                 'created': actor.id,
                 'total_actors': len(Movies.query.all())
             })
+
+        except:
+            abort(422)
+
+    @app.route('/actors/<int:actor_id>', methods=['PATCH'])
+    @requires_auth('patch:actors')
+    def update_actor(payload, actor_id):
+
+        body = request.get_json()
+        name = body.get('name', None)
+        age = body.get('age', None)
+        gender = body.get('gender', None)
+        actor = Actors.query.filter(Actors.id == actor_id).one_or_none()
+        
+        if actor is None:
+            abort(404)
+
+        try:
+            actor.name = name
+            actor.age = age
+            actor.gender = gender
+            actor.update()
+
+            return jsonify({
+                'success': True,
+                'updated': Actors.id,
+                'total_actors': len(Actors.query.all())
+            })
+
+        except:
+            abort(422)
+
+    @app.route('/actors/<int:actor_id>', methods=['DELETE'])
+    @requires_auth('delete:actors')
+    def delete_actor(payload, actor_id):
+
+        actor = Actors.query.filter(Actors.id == actor_id).one_or_none()
+
+        if actor is None:
+            abort(404)
+
+        try:
+            actor.delete()
+
+            return jsonify({
+                'success': True,
+                'delete': actor_id
+            }), 200
 
         except:
             abort(422)
