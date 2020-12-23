@@ -9,9 +9,6 @@ from flask_cors import CORS
 from models import setup_db, Movies, Actors
 from auth import AuthError, requires_auth
 
-MOVIES_PER_PAGE = 10
-ACTORS_PER_PAGE = 10
-
 def create_app(test_config=None):
     # create and configure the app
     app = Flask(__name__)
@@ -62,7 +59,6 @@ def create_app(test_config=None):
             body = request.get_json()
             title = body['title']
             release_date = body['release_date']
-            runtime = body['runtime']
             actors = body['actors']
             movie = Movies(title=title, release_date=release_date, actors=actors)
             movie.insert()
@@ -254,7 +250,7 @@ def create_app(test_config=None):
 
     return app
 
-APP = create_app()
+app = create_app()
 
 if __name__ == '__main__':
-    APP.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=True)

@@ -4,8 +4,9 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 
-database_name = "moviesdb"
-database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+database_filename = "movies.db"
+project_dir = os.path.dirname(os.path.abspath(__file__))
+database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
 
 db = SQLAlchemy()
 
@@ -27,7 +28,6 @@ class Movies(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     release_date = db.Column(db.Integer, nullable=False)
-    runtime = db.Column(db.Integer, nullable=False)
     actor_id = Column(Integer, ForeignKey('Actors.id'))
     stars = db.relationship('Actors', backref='Movies', lazy=True)
 
@@ -49,8 +49,7 @@ class Movies(db.Model):
         return {
             'id': self.id,
             'title': self.title,
-            'release_date': self.release_date,
-            'runtime': self.runtime
+            'release_date': self.release_date
             }
 
 class Actors(db.Model):
