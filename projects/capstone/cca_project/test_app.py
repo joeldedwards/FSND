@@ -3,12 +3,11 @@ import os
 import unittest
 import json
 from flask_sqlalchemy import SQLAlchemy
-
 from app import create_app
 from models import setup_db, Movies, Actors
 
 
-class TriviaTestCase(unittest.TestCase):
+class CapstoneCastingTestCase(unittest.TestCase):
     """This class represents the trivia test case"""
 
     def setUp(self):
@@ -49,58 +48,59 @@ class TriviaTestCase(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data["success"], True)
 
-    def test_delete_questions(self):
-        res = self.client().delete('/questions/24')
+    def test_delete_movies(self):
+        res = self.client().delete('/movies/3')
         data = json.loads(res.data)
 
-        question = Question.query.filter(Question.id == 24).one_or_none()
+        movie = Movies.query.filter(Movies.id == 1).one_or_none()
         
         self.assertEqual(data['success'], True)
-        self.assertEqual(data['deleted'], 24)
+        self.assertEqual(data['deleted'], 1)
         
-    def test_fail_delete_questions(self):
-        res = self.client().delete('/questions/1000')
+    def test_fail_delete_movies(self):
+        res = self.client().delete('/movies/10000')
         data = json.loads(res.data)
         
         self.assertEqual(res.status_code, 422)
         self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
-        
-    def test_search_questions(self):
-        res = self.client().post('/questions/search', json={"searchTerm":"play"})
+
+    def test_get_actors(self):
+        res = self.client().get('/actors')
         data = json.loads(res.data)
-        
+
         self.assertEqual(res.status_code, 200)
         self.assertEqual(data['success'], True)
-        self.assertIsNotNone(data['questions'])
-        self.assertIsNotNone(data['total_questions'])
+        self.assertTrue(data['total_actors'])
 
-    def test_quiz(self):
-        res = self.client().post('/quizzes', json={
-            "previous_questions": [], 
-            "quiz_category": {
-                "id": "1", 
-                "type": "Science"
-            }
-        })
+    def test_add_actor(self):
+        actor = {
+            'name': 'Dwayne Johnson',
+            'age': 48,
+            'gender': 'female'
+        }
+        
+        res = self.client().post('/add', json=actor)
         data = json.loads(res.data)
-
         self.assertEqual(res.status_code, 200)
-        self.assertIsNotNone(data['question'])
+        self.assertEqual(data["success"], True)
 
-    def test_fail_quiz(self):
-        res = self.client().post('/quizzes', json={
-            "previous_questions": [], 
-            "quiz_category": {
-                "id": "10", "type": "Science"
-            }
-        })
+    def test_delete_actors(self):
+        res = self.client().delete('/actors/1')
         data = json.loads(res.data)
 
+        actor = Actors.query.filter(Actors.id == 1).one_or_none()
+        
+        self.assertEqual(data['success'], True)
+        self.assertEqual(data['deleted'], 1)
+        
+    def test_fail_delete_actors(self):
+        res = self.client().delete('/actors/10000')
+        data = json.loads(res.data)
+        
         self.assertEqual(res.status_code, 422)
-        self.assertEqual(data["success"], False)
+        self.assertEqual(data['success'], False)
         self.assertEqual(data['message'], 'unprocessable')
 
-# Make the tests conveniently executable
 if __name__ == "__main__":
     unittest.main()

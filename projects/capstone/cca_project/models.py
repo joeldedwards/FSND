@@ -1,23 +1,23 @@
 import os
-from sqlalchemy import Column, String, Integer, Float, ForeignKey, create_engine
+from sqlalchemy import Column, String, Integer, Float, create_engine
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 
-database_filename = "movies.db"
-project_dir = os.path.dirname(os.path.abspath(__file__))
-database_path = "sqlite:///{}".format(os.path.join(project_dir, database_filename))
+database_name = "movies"
+database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+# database_path = "postgres://postgres:password@localhost:5432/movies"
 
 db = SQLAlchemy()
+migrate = Migrate()
 
 def setup_db(app, database_path=database_path):
     app.config["SQLALCHEMY_DATABASE_URI"] = database_path
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     db.app = app
     db.init_app(app)
-    db.create_all()
-    migrate = Migrate(app, db)
-
+    migrate.init_app(app, db)
+    
 def db_drop_and_create_all():
     db.drop_all()
     db.create_all()
@@ -28,7 +28,6 @@ class Movies(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
     release_date = db.Column(db.Integer, nullable=False)
-    actor_id = Column(Integer, ForeignKey('Actors.id'))
     stars = db.relationship('Actors', backref='Movies', lazy=True)
 
     def __repr__(self):
@@ -56,13 +55,14 @@ class Actors(db.Model):
     __tablename__ = 'Actors'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(), nullable=False)
+    firstname = db.Column(db.String(), nullable=False)
+    lastname = db.Column(db.String(), nullable=False)
     age = db.Column(db.Integer, nullable=False)
     gender = db.Column(String, nullable=False)
     films = db.relationship('Movies', backref='Actors', lazy=True)
 
     def __repr__(self):
-        return f'<Actors {self.id} {self.name}>'
+        return f'<Actors {self.id}>'
     
     def insert(self):
         db.session.add(self)
@@ -78,7 +78,8 @@ class Actors(db.Model):
     def format(self):
         return {
             'id': self.id,
-            'name': self.name,
+            'firstname': self.firstname,
+            'lastname': self.lastname,
             'age': self.age,
             'gender': self.gender
             }

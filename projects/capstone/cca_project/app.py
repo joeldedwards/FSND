@@ -79,7 +79,6 @@ def create_app(test_config=None):
         body = request.get_json()
         title = body.get('title', None)
         release_date = body.get('release_date', None)
-        runtime = body.get('runtime', None)
         actors = body.get('actors', None)
         movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
         
@@ -89,7 +88,6 @@ def create_app(test_config=None):
         try:
             movie.title = title
             movie.release_date = release_date
-            movie.runtime = runtime
             movie.actors = actors
             movie.update()
 
