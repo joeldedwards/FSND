@@ -6,8 +6,9 @@ import os
 from flask import Flask, request, abort, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-from models import setup_db, Movies, Actors
+from models import setup_db, db_drop_and_create_all, Movies, Actors
 from auth import AuthError, requires_auth
+import sys
 
 def create_app(test_config=None):
     # create and configure the app

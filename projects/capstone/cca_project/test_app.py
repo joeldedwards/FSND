@@ -75,9 +75,10 @@ class CapstoneCastingTestCase(unittest.TestCase):
 
     def test_add_actor(self):
         actor = {
-            'name': 'Dwayne Johnson',
+            'firstname': 'Dwayne',
+            'lastname': 'Johnson',
             'age': 48,
-            'gender': 'female'
+            'gender': 'Male'
         }
         
         res = self.client().post('/add', json=actor)

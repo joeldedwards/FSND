@@ -6,7 +6,6 @@ import json
 
 database_name = "movies"
 database_path = "postgres://{}/{}".format('localhost:5432', database_name)
-# database_path = "postgres://postgres:password@localhost:5432/movies"
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -17,7 +16,7 @@ def setup_db(app, database_path=database_path):
     db.app = app
     db.init_app(app)
     migrate.init_app(app, db)
-    
+
 def db_drop_and_create_all():
     db.drop_all()
     db.create_all()
