@@ -52,16 +52,16 @@ def create_app(test_config=None):
           'total_movies': len(Movies.query.all())
         })
 
-    @app.route('/add', methods=['POST'])
+    @app.route('/movies/add', methods=['POST'])
     @requires_auth('post:movies')
     def add_movie(payload):
 
         try:
             body = request.get_json()
             title = body['title']
-            release_date = body['release_date']
+            release_year = body['release_year']
             actors = body['actors']
-            movie = Movies(title=title, release_date=release_date, actors=actors)
+            movie = Movies(title=title, release_year=release_year, actors=actors)
             movie.insert()
 
             return jsonify({
@@ -79,7 +79,7 @@ def create_app(test_config=None):
 
         body = request.get_json()
         title = body.get('title', None)
-        release_date = body.get('release_date', None)
+        release_year = body.get('release_year', None)
         actors = body.get('actors', None)
         movie = Movies.query.filter(Movies.id == movie_id).one_or_none()
         
@@ -88,7 +88,7 @@ def create_app(test_config=None):
 
         try:
             movie.title = title
-            movie.release_date = release_date
+            movie.release_year = release_year
             movie.actors = actors
             movie.update()
 
@@ -130,7 +130,7 @@ def create_app(test_config=None):
           'total_actors': len(Actors.query.all())
         })
 
-    @app.route('/add', methods=['POST'])
+    @app.route('/actors/add', methods=['POST'])
     @requires_auth('post:actors')
     def add_actor(payload):
         body = request.get_json()

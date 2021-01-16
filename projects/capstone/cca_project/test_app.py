@@ -14,9 +14,13 @@ class CapstoneCastingTestCase(unittest.TestCase):
         """Define test variables and initialize app."""
         self.app = create_app()
         self.client = self.app.test_client
-        self.database_name = "movies"
+        self.database_name = "movies_test"
         self.database_path = "postgres://{}/{}".format('localhost:5432', self.database_name)
         setup_db(self.app, self.database_path)
+
+        self.assistant_token = os.environ.get('casting_assistant_token')
+        self.director_token = os.environ.get('casting_director_token')
+        self.executive_token = os.environ.get('executive_director_token')
 
         # binds the app to the current context
         with self.app.app_context():
@@ -40,7 +44,7 @@ class CapstoneCastingTestCase(unittest.TestCase):
     def test_add_movie(self):
         movie = {
             'title': 'Gladiator',
-            'release_date': '2000-05-05'
+            'release_year': '2000'
         }
         
         res = self.client().post('/add', json=movie)

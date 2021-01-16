@@ -1,11 +1,15 @@
 import os
-from sqlalchemy import Column, String, Integer, Float, create_engine
+from sqlalchemy import Column, String, Integer, ForeignKey, Float, create_engine
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 import json
 
-database_name = "movies"
-database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+database_path = os.environ.get('DATABASE_URL')
+
+if not database_path:
+    database_name = "movies"
+    database_path = "postgres://{}/{}".format('localhost:5432', database_name)
+
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -26,7 +30,8 @@ class Movies(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(50), nullable=False)
-    release_date = db.Column(db.Integer, nullable=False)
+    release_year = db.Column(db.Integer, nullable=False)
+    actor_id = db.Column(Integer, ForeignKey('Actors.id'))
     stars = db.relationship('Actors', backref='Movies', lazy=True)
 
     def __repr__(self):
@@ -47,7 +52,7 @@ class Movies(db.Model):
         return {
             'id': self.id,
             'title': self.title,
-            'release_date': self.release_date
+            'release_year': self.release_year
             }
 
 class Actors(db.Model):
